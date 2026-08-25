@@ -101,6 +101,29 @@ why.
 - `VIA_ENABLE = no` — disabled in favor of the custom C logic above.
 - `LTO_ENABLE = yes` — smaller firmware.
 
+## Setup
+
+QMK expects this to live at `keyboards/ploopyco/bean` inside a full
+`qmk_firmware` checkout — it won't build from a standalone clone. Rather than
+copying files back and forth, clone the two repos separately and symlink this
+one into place:
+
+```bash
+# Ploopy's QMK fork — needed for the tmag5273axial pointing-device driver
+git clone git@github.com:ploopyco/qmk_firmware.git ~/qmk_firmware
+
+git clone git@github.com:heckler1/ploopy-bean-qmk-config.git ~/git/ploopy-bean-qmk-config
+
+# The stock bean directory gets replaced entirely by the symlink
+rm -rf ~/qmk_firmware/keyboards/ploopyco/bean
+ln -s ~/git/ploopy-bean-qmk-config ~/qmk_firmware/keyboards/ploopyco/bean
+```
+
+From then on this repo *is* `keyboards/ploopyco/bean` as far as QMK is
+concerned — edit and commit here, and `qmk compile` (run from inside
+`~/qmk_firmware`, or after `qmk config user.qmk_home="~/qmk_firmware"`) picks
+the changes up directly, with no copying step.
+
 ## Compiling
 
 ```bash
