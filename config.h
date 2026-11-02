@@ -61,6 +61,9 @@ the acceleration factors below.
 // Lower = slower/more precise fine movement, without affecting speeds >= MOUSE_ACCEL_MIN_SPEED.
 #define MOUSE_ACCEL_LOW_SPEED_SENSITIVITY 0.01f
 #define MOUSE_ACCEL_POWER 2 // Exponential scaling of the acceleration
+// Zero the fractional-count accumulators after this many ms with no sensor motion,
+// so noise can't integrate into slow drift between movements.
+#define ACCUM_IDLE_RESET_MS 30
 
 /* --- Scroll Configuration (Quadratic & High-Res) --- */
 #define SCROLL_ACCEL_MIN_SPEED 15 // Threshold to start acceleration

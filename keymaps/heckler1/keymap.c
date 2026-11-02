@@ -108,6 +108,19 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report)
         // Cursor movement: low_speed_sensitivity < 1.0 makes fine movement
         // slower/more precise; accumulate so that scaling doesn't truncate
         // small counts to 0 (medium/high speed, i.e. speed >= min_speed, is
+    // Drop any carried-over fractions once the ball has been quiet for a
+    // while, so sensor noise/bias can't pile up across separate movements
+    // and surface later as slow cursor drift.
+    static uint16_t last_motion_time = 0;
+    if (mouse_report.x != 0 || mouse_report.y != 0) {
+        last_motion_time = timer_read();
+    } else if (timer_elapsed(last_motion_time) >= ACCUM_IDLE_RESET_MS) {
+        mouse_accum_x  = 0.0f;
+        mouse_accum_y  = 0.0f;
+        scroll_accum_x = 0.0f;
+        scroll_accum_y = 0.0f;
+    }
+
         // unaffected by the ramp).
         float factor = accel_factor(speed, MOUSE_ACCEL_MIN_SPEED, MOUSE_ACCEL_SLOPE, MOUSE_ACCEL_LIMIT, MOUSE_ACCEL_LOW_SPEED_SENSITIVITY, MOUSE_ACCEL_POWER);
         mouse_report.x = (int16_t)accumulate_axis(&mouse_accum_x, (float)mouse_report.x * factor);
