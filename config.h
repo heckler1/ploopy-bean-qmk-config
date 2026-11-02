@@ -55,11 +55,14 @@ the acceleration factors below.
 
 /* --- Mouse Acceleration (Quadratic) --- */
 #define MOUSE_ACCEL_MIN_SPEED 17 // Threshold to start acceleration
-#define MOUSE_ACCEL_SLOPE 1.15  // Aggressiveness of acceleration (Curve Steepness)
-#define MOUSE_ACCEL_LIMIT 2 // Maximum speed multiplier cap
-// Multiplier applied at speed == 0, ramping linearly to 1.0x at MOUSE_ACCEL_MIN_SPEED.
+#define MOUSE_ACCEL_SLOPE 0.6  // Aggressiveness of acceleration (Curve Steepness)
+#define MOUSE_ACCEL_LIMIT 1.5 // Maximum speed multiplier cap
+// Multiplier applied at speed == 0, ramping to 1.0x at MOUSE_ACCEL_MIN_SPEED.
 // Lower = slower/more precise fine movement, without affecting speeds >= MOUSE_ACCEL_MIN_SPEED.
 #define MOUSE_ACCEL_LOW_SPEED_SENSITIVITY 0.01f
+// Shape of that ramp: 1.0 is linear, higher values hold the multiplier down for longer
+// (finer slow/mid-speed control) and then rise more steeply to 1.0x at MOUSE_ACCEL_MIN_SPEED.
+#define MOUSE_ACCEL_LOW_SPEED_RAMP_POWER 2.0f
 #define MOUSE_ACCEL_POWER 2 // Exponential scaling of the acceleration
 // Zero the fractional-count accumulators after this many ms with no sensor motion,
 // so noise can't integrate into slow drift between movements.

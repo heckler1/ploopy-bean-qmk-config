@@ -52,17 +52,20 @@ static int32_t accumulate_axis(float *accum, float delta) {
 // Acceleration multiplier for a given 2D speed.
 //
 // At/above min_speed: quadratic growth, capped at limit.
-// Below min_speed: ramps linearly from low_speed_sensitivity (at speed == 0)
-// up to 1.0 (at speed == min_speed), so it blends into the quadratic curve
-// exactly where that curve already starts at 1.0. Passing 1.0 collapses the
-// ramp to a flat 1:1 passthrough below min_speed, reproducing the original
-// (non-low-speed-aware) curve used for scroll.
-static float accel_factor(float speed, float min_speed, float slope, float limit, float low_speed_sensitivity, float power) {
+// Below min_speed: ramps from low_speed_sensitivity (at speed == 0) up to 1.0
+// (at speed == min_speed), so it blends into the quadratic curve exactly where
+// that curve already starts at 1.0. ramp_power shapes the ramp: 1.0 is linear,
+// higher values stay lower for longer and then rise more steeply, keeping
+// slow movement fine without moving the point where the curve reaches 1.0.
+// Passing a low_speed_sensitivity of 1.0 collapses the ramp to a flat 1:1
+// passthrough below min_speed, reproducing the original (non-low-speed-aware)
+// curve used for scroll.
+static float accel_factor(float speed, float min_speed, float slope, float limit, float low_speed_sensitivity, float ramp_power, float power) {
     if (speed <= 0.0f) {
         return low_speed_sensitivity;
     }
     if (speed < min_speed) {
-        return low_speed_sensitivity + (1.0f - low_speed_sensitivity) * (speed / min_speed);
+        return low_speed_sensitivity + (1.0f - low_speed_sensitivity) * powf(speed / min_speed, ramp_power);
     }
     // Quadratic acceleration formula.
     // Use a smaller divisor (0.001) since we are squaring the speed difference.
@@ -131,14 +134,14 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report)
         // slower/more precise; accumulate so that scaling doesn't truncate
         // small counts to 0 (medium/high speed, i.e. speed >= min_speed, is
         // unaffected by the ramp).
-        float factor = accel_factor(speed, MOUSE_ACCEL_MIN_SPEED, MOUSE_ACCEL_SLOPE, MOUSE_ACCEL_LIMIT, MOUSE_ACCEL_LOW_SPEED_SENSITIVITY, MOUSE_ACCEL_POWER);
+        float factor = accel_factor(speed, MOUSE_ACCEL_MIN_SPEED, MOUSE_ACCEL_SLOPE, MOUSE_ACCEL_LIMIT, MOUSE_ACCEL_LOW_SPEED_SENSITIVITY, MOUSE_ACCEL_LOW_SPEED_RAMP_POWER, MOUSE_ACCEL_POWER);
         mouse_report.x = (int16_t)accumulate_axis(&mouse_accum_x, (float)mouse_report.x * factor);
         mouse_report.y = (int16_t)accumulate_axis(&mouse_accum_y, (float)mouse_report.y * factor);
     } else {
         // DRAG SCROLL MODE (ACCELERATED, OMNIDIRECTIONAL, NO LOCKING)
         // low_speed_sensitivity of 1.0 keeps the flat 1:1 passthrough below
         // min_speed (no low-speed ramp for scroll).
-        float factor = accel_factor(speed, SCROLL_ACCEL_MIN_SPEED, SCROLL_ACCEL_SLOPE, SCROLL_ACCEL_LIMIT, 1.0f, SCROLL_ACCEL_POWER);
+        float factor = accel_factor(speed, SCROLL_ACCEL_MIN_SPEED, SCROLL_ACCEL_SLOPE, SCROLL_ACCEL_LIMIT, 1.0f, 1.0f, SCROLL_ACCEL_POWER);
 
         int8_t h_part = (int8_t)accumulate_axis(&scroll_accum_x, (float)mouse_report.x * factor * SCROLL_SENSITIVITY);
         int8_t v_part = (int8_t)accumulate_axis(&scroll_accum_y, (float)mouse_report.y * factor * -1.0f * SCROLL_SENSITIVITY); // Invert Y for Scroll V

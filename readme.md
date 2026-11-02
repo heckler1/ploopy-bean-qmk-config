@@ -46,6 +46,7 @@ read it directly rather than trusting numbers copied into this doc.
 | `MOUSE_ACCEL_SLOPE` | Steepness of the cursor acceleration curve |
 | `MOUSE_ACCEL_LIMIT` | Max cursor acceleration multiplier |
 | `MOUSE_ACCEL_LOW_SPEED_SENSITIVITY` | Cursor multiplier at rest, ramping to 1.0x at `MOUSE_ACCEL_MIN_SPEED` — lower = slower/more precise fine movement |
+| `MOUSE_ACCEL_LOW_SPEED_RAMP_POWER` | Shape of the low-speed ramp: 1.0 is linear, higher holds the multiplier down longer for finer slow/mid-speed control |
 | `MOUSE_ACCEL_POWER` | Exponent of the cursor acceleration curve |
 | `SCROLL_ACCEL_MIN_SPEED` | Counts/report before scroll acceleration kicks in |
 | `SCROLL_ACCEL_SLOPE` | Steepness of the scroll acceleration curve |
