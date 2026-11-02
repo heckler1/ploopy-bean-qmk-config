@@ -109,8 +109,11 @@ copying files back and forth, clone the two repos separately and symlink this
 one into place:
 
 ```bash
-# Ploopy's QMK fork — needed for the tmag5273axial pointing-device driver
-git clone git@github.com:ploopyco/qmk_firmware.git ~/qmk_firmware
+# Ploopy's QMK fork, `ploopyco/bean` branch — needed for the tmag5273axial
+# pointing-device driver. Neither upstream QMK nor the fork's default branch
+# (master) has the driver or the bean keyboard, so the branch matters.
+git clone -b ploopyco/bean git@github.com:ploopyco/qmk_firmware.git ~/qmk_firmware
+cd ~/qmk_firmware && git submodule update --init --recursive
 
 git clone git@github.com:heckler1/ploopy-bean-qmk-config.git ~/git/ploopy-bean-qmk-config
 
@@ -121,6 +124,18 @@ ln -s ~/git/ploopy-bean-qmk-config ~/qmk_firmware/keyboards/ploopyco/bean
 
 From then on this repo *is* `keyboards/ploopyco/bean` as far as QMK is
 concerned — edit and commit here, and `qmk compile` (run from inside
+That branch is based on an older QMK master, so it's best kept as its own
+checkout rather than reusing a current upstream `qmk_firmware` clone. If you
+already have one, add a worktree instead of switching branches:
+
+```bash
+git remote add ploopyco https://github.com/ploopyco/qmk_firmware.git
+git fetch ploopyco ploopyco/bean
+git worktree add -b bean-build ../qmk_firmware_ploopy_bean ploopyco/ploopyco/bean
+cd ../qmk_firmware_ploopy_bean
+git submodule update --init --recursive --reference ~/qmk_firmware
+```
+
 `~/qmk_firmware`, or after `qmk config user.qmk_home="~/qmk_firmware"`) picks
 the changes up directly, with no copying step.
 
@@ -132,6 +147,10 @@ qmk compile -kb ploopyco/bean/rev1_001 -km heckler1
 
 See the [build environment setup](https://docs.qmk.fm/#/getting_started_build_tools)
 and the [make instructions](https://docs.qmk.fm/#/getting_started_make_guide) for
+The resulting `ploopyco_bean_rev1_001_heckler1.uf2` is written to the root of
+the `qmk_firmware` checkout (and `.build/`); see
+[Triggering the bootloader](#triggering-the-bootloader) to flash it.
+
 more information. Brand new to QMK? Start with the
 [Complete Newbs Guide](https://docs.qmk.fm/#/newbs).
 
