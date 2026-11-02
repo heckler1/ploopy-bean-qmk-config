@@ -65,6 +65,10 @@ the acceleration factors below.
 // so noise can't integrate into slow drift between movements.
 #define ACCUM_IDLE_RESET_MS 30
 
+// Negate both sensor axes. The magnet's pole orientation sets the sign of the
+// field the sensor reads, so a magnet installed the other way up reverses movement.
+#define SENSOR_INVERT_XY
+
 /* --- Scroll Configuration (Quadratic & High-Res) --- */
 #define SCROLL_ACCEL_MIN_SPEED 15 // Threshold to start acceleration
 #define SCROLL_ACCEL_SLOPE 1.5  // Aggressiveness of acceleration (Curve Steepness)

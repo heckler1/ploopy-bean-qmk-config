@@ -106,6 +106,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 // --- POINTING DEVICE LOGIC ---
 report_mouse_t pointing_device_task_user(report_mouse_t mouse_report)
 {
+#ifdef SENSOR_INVERT_XY
+    mouse_report.x = -mouse_report.x;
+    mouse_report.y = -mouse_report.y;
+#endif
+
     float speed = sqrt(pow(mouse_report.x, 2) + pow(mouse_report.y, 2));
 
     // Drop any carried-over fractions once the ball has been quiet for a
