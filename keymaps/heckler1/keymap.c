@@ -94,9 +94,13 @@ typedef struct {
 /*********************************
 * Main layout and movement logic *
 **********************************/
+// Top left sends macOS Mission Control. Middle click lives on the tap-dance
+// key's single tap instead (see double_tap_scroll_finished()).
+#define TOP_LEFT_KEY KC_MISSION_CONTROL
+
 // Button order in matrix: bottom left, top left, top right, bottom right
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-    [0] = LAYOUT( MS_BTN1, MS_BTN3, TD(TD_DOUBLE_TAP_SCROLL), MS_BTN2 ),
+    [0] = LAYOUT( MS_BTN1, TOP_LEFT_KEY, TD(TD_DOUBLE_TAP_SCROLL), MS_BTN2 ),
 };
 
 // --- POINTING DEVICE LOGIC ---
@@ -104,10 +108,6 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report)
 {
     float speed = sqrt(pow(mouse_report.x, 2) + pow(mouse_report.y, 2));
 
-    if (!drag_scroll_on) {
-        // Cursor movement: low_speed_sensitivity < 1.0 makes fine movement
-        // slower/more precise; accumulate so that scaling doesn't truncate
-        // small counts to 0 (medium/high speed, i.e. speed >= min_speed, is
     // Drop any carried-over fractions once the ball has been quiet for a
     // while, so sensor noise/bias can't pile up across separate movements
     // and surface later as slow cursor drift.
@@ -121,6 +121,10 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report)
         scroll_accum_y = 0.0f;
     }
 
+    if (!drag_scroll_on) {
+        // Cursor movement: low_speed_sensitivity < 1.0 makes fine movement
+        // slower/more precise; accumulate so that scaling doesn't truncate
+        // small counts to 0 (medium/high speed, i.e. speed >= min_speed, is
         // unaffected by the ramp).
         float factor = accel_factor(speed, MOUSE_ACCEL_MIN_SPEED, MOUSE_ACCEL_SLOPE, MOUSE_ACCEL_LIMIT, MOUSE_ACCEL_LOW_SPEED_SENSITIVITY, MOUSE_ACCEL_POWER);
         mouse_report.x = (int16_t)accumulate_axis(&mouse_accum_x, (float)mouse_report.x * factor);
@@ -171,9 +175,9 @@ static td_tap_t double_tap_scroll_tap_state = {
     .state = TD_NONE};
 
 /*********************************************
-* MS_BTN3 + tap-dance chord -> back/forward  *
+* TOP_LEFT_KEY + tap-dance chord -> back/forward  *
 **********************************************/
-// Chording the tap-dance button (top right) with MS_BTN3 (top left) sends
+// Chording the tap-dance button (top right) with TOP_LEFT_KEY (top left) sends
 // MS_BTN4/MS_BTN5 instead of the tap-dance key's own tap/hold action. This
 // used to be implemented with QMK's combo feature, but combo processing
 // buffers *every* press of a combo member for COMBO_TERM before letting it
@@ -191,19 +195,18 @@ static td_tap_t double_tap_scroll_tap_state = {
 // since back/forward is a one-shot action, not a state that should stay
 // "held" for however long the user happens to keep a physical button down.
 //
-// MS_BTN3's own press (*and* release) is deferred rather than registered
+// TOP_LEFT_KEY's own press (*and* release) is deferred rather than registered
 // immediately: if it registered right away, a chord would still send a
-// real, if brief, MS_BTN3 click to the host before canceling it -- and some
-// hosts/apps treat even a brief middle-click as "start autoscroll," which
-// then eats the chord's own output. Deferring the release too (not just the
-// press) matters for a fast roll from MS_BTN3 onto the tap-dance key: BTN3
-// often physically releases right as/before the second key goes down, and
-// if that release immediately committed a click, the chord would lose the
+// real, if brief, TOP_LEFT_KEY press (Mission Control) to the host before
+// canceling it, which would pop it open mid-chord. Deferring the release too
+// (not just the press) matters for a fast roll from TOP_LEFT_KEY onto the
+// tap-dance key: it often physically releases right as/before the second key
+// goes down, and if that release immediately committed a press, the chord would lose the
 // race against its own cancellation. Holding both edges back until either a
 // chord consumes them or CHORD_TERM expires (matrix_scan_user below) avoids
-// ever sending that click for a hold *or* a roll.
+// ever sending that press for a hold *or* a roll.
 //
-// This does mean a plain middle click is no longer reported press-to-release:
+// This does mean a plain press is no longer reported press-to-release:
 // held under CHORD_TERM, it's compressed into a single short tap at the
 // CHORD_TERM mark; held longer, the host sees the down edge CHORD_TERM late.
 // CHORD_TERM is kept tight (200ms) specifically to bound that cost -- the
@@ -211,29 +214,29 @@ static td_tap_t double_tap_scroll_tap_state = {
 // covers them with margin without making a plain click feel sluggish.
 #define CHORD_TERM 200
 
-static bool     btn3_pending    = false; // MS_BTN3 pressed, chord window still open, no output sent yet.
-static bool     btn3_down       = false; // Is MS_BTN3 currently physically held (independent of what's been sent).
-static bool     btn3_committed  = false; // MS_BTN3 registered for real (chord window passed while still held).
+static bool     btn3_pending    = false; // TOP_LEFT_KEY pressed, chord window still open, no output sent yet.
+static bool     btn3_down       = false; // Is TOP_LEFT_KEY currently physically held (independent of what's been sent).
+static bool     btn3_committed  = false; // TOP_LEFT_KEY registered for real (chord window passed while still held).
 static uint16_t btn3_press_time = 0;
-static bool     btn3_suppressed = false; // MS_BTN3 consumed into a chord; swallow its press and matching release.
+static bool     btn3_suppressed = false; // TOP_LEFT_KEY consumed into a chord; swallow its press and matching release.
 static uint16_t td_press_time   = 0; // Last physical press of the tap-dance key, for the late-back-chord check below.
 
 void matrix_scan_user(void)
 {
     if (btn3_pending && timer_elapsed(btn3_press_time) >= CHORD_TERM)
     {
-        // Chord window passed with no tap-dance press: resolve MS_BTN3 as a
+        // Chord window passed with no tap-dance press: resolve TOP_LEFT_KEY as a
         // real click. Still held -> a real hold, to be unregistered on its
         // actual release. Already released -> a complete, if delayed, tap.
         btn3_pending = false;
         if (btn3_down)
         {
             btn3_committed = true;
-            register_code16(MS_BTN3);
+            register_code16(TOP_LEFT_KEY);
         }
         else
         {
-            tap_code16(MS_BTN3);
+            tap_code16(TOP_LEFT_KEY);
         }
     }
 }
@@ -243,13 +246,13 @@ static void double_tap_scroll_finished(tap_dance_state_t *state, void *user_data
 {
     double_tap_scroll_tap_state.state = cur_dance(state);
 
-    if (state->interrupted && state->interrupting_keycode == MS_BTN3)
+    if (state->interrupted && state->interrupting_keycode == TOP_LEFT_KEY)
     {
         // Top-right held, top-left presses before the dance times out: back,
         // not drag-scroll. Resolved via tap dance's own interrupt, so this
         // costs no extra latency beyond the dance's own TAPPING_TERM.
         tap_code16(MS_BTN5);
-        btn3_suppressed = true; // MS_BTN3 must not also register its own click.
+        btn3_suppressed = true; // TOP_LEFT_KEY must not also register its own click.
         // This wasn't a hold: make sure double_tap_scroll_reset() doesn't
         // mistake it for one and unregister DRAG_SCROLL on release.
         double_tap_scroll_tap_state.state = TD_NONE;
@@ -258,9 +261,9 @@ static void double_tap_scroll_finished(tap_dance_state_t *state, void *user_data
 
     switch (double_tap_scroll_tap_state.state)
     {
-    // case TD_SINGLE_TAP:
-    //     tap_code(KC_QUOT);
-    //     break;
+    case TD_SINGLE_TAP:
+        tap_code16(MS_BTN3);
+        break;
     case TD_SINGLE_HOLD:
         register_code16(DRAG_SCROLL);
         drag_scroll_on = true;
@@ -302,7 +305,7 @@ tap_dance_action_t tap_dance_actions[] = {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record)
 {
-    if (keycode == MS_BTN3)
+    if (keycode == TOP_LEFT_KEY)
     {
         if (record->event.pressed)
         {
@@ -315,9 +318,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
             {
                 // The tap-dance key's own dance already resolved to a hold
                 // (TAPPING_TERM has a hard cap on tap dance's interrupt
-                // window) before MS_BTN3 arrived, but we're still within the
+                // window) before TOP_LEFT_KEY arrived, but we're still within the
                 // wider chord window: treat it as a late back-chord instead
-                // of leaving drag-scroll on alongside a plain MS_BTN3 click.
+                // of leaving drag-scroll on alongside a plain TOP_LEFT_KEY click.
                 unregister_code16(DRAG_SCROLL);
                 drag_scroll_on                    = false;
                 double_tap_scroll_tap_state.state = TD_NONE;
@@ -342,7 +345,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
                 btn3_pending   = false;
                 return true;
             }
-            // Otherwise MS_BTN3 is still pending (chord window not yet
+            // Otherwise TOP_LEFT_KEY is still pending (chord window not yet
             // resolved -- matrix_scan_user will tap it out if nothing
             // consumes it first) or was already consumed by a chord. Either
             // way there's nothing to send here.
@@ -357,9 +360,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
             td_press_time = timer_read();
             if (btn3_pending)
             {
-                // MS_BTN3's click is still being held back: this is a chord,
+                // TOP_LEFT_KEY's click is still being held back: this is a chord,
                 // not a standalone click -- consume it without ever
-                // registering MS_BTN3 at all.
+                // registering TOP_LEFT_KEY at all.
                 btn3_pending = false;
                 tap_code16(MS_BTN4);
                 return false;

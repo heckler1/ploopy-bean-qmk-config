@@ -70,12 +70,14 @@ final `SCROLL_SENSITIVITY` multiplier.
 | Position | Action |
 | --- | --- |
 | Bottom Left | Left Click (`MS_BTN1`) |
-| Top Left | Middle Click (`MS_BTN3`) |
+| Top Left | Mission Control (`KC_MISSION_CONTROL`) |
 | Top Right | Drag-scroll tap-dance (see below) |
 | Bottom Right | Right Click (`MS_BTN2`) |
 
 ### Drag-scroll tap-dance (Top Right)
 
+- **Single tap**: middle click (`MS_BTN3`). Sent once the tap-dance window
+  (`TAPPING_TERM`) resolves, so it lands slightly after the release.
 - **Hold**: drag-scroll is active while held, and turns off automatically on
   release.
 - **Double-tap**: toggles drag-scroll on/off as a lock (tap again to
@@ -83,7 +85,7 @@ final `SCROLL_SENSITIVITY` multiplier.
 
 ### Back/forward chord (Top Left + Top Right)
 
-Chording Top Left (`MS_BTN3`) with the tap-dance key sends back/forward
+Chording Top Left (`TOP_LEFT_KEY`, Mission Control) with the tap-dance key sends back/forward
 instead of either key's own action — Top Left held then Top Right pressed
 sends forward, Top Right held then Top Left pressed sends back. The chord is
 detected directly in `process_record_user()`/`matrix_scan_user()` rather than
@@ -122,8 +124,6 @@ rm -rf ~/qmk_firmware/keyboards/ploopyco/bean
 ln -s ~/git/ploopy-bean-qmk-config ~/qmk_firmware/keyboards/ploopyco/bean
 ```
 
-From then on this repo *is* `keyboards/ploopyco/bean` as far as QMK is
-concerned — edit and commit here, and `qmk compile` (run from inside
 That branch is based on an older QMK master, so it's best kept as its own
 checkout rather than reusing a current upstream `qmk_firmware` clone. If you
 already have one, add a worktree instead of switching branches:
@@ -136,6 +136,8 @@ cd ../qmk_firmware_ploopy_bean
 git submodule update --init --recursive --reference ~/qmk_firmware
 ```
 
+From then on this repo *is* `keyboards/ploopyco/bean` as far as QMK is
+concerned — edit and commit here, and `qmk compile` (run from inside
 `~/qmk_firmware`, or after `qmk config user.qmk_home="~/qmk_firmware"`) picks
 the changes up directly, with no copying step.
 
@@ -145,12 +147,12 @@ the changes up directly, with no copying step.
 qmk compile -kb ploopyco/bean/rev1_001 -km heckler1
 ```
 
-See the [build environment setup](https://docs.qmk.fm/#/getting_started_build_tools)
-and the [make instructions](https://docs.qmk.fm/#/getting_started_make_guide) for
 The resulting `ploopyco_bean_rev1_001_heckler1.uf2` is written to the root of
 the `qmk_firmware` checkout (and `.build/`); see
 [Triggering the bootloader](#triggering-the-bootloader) to flash it.
 
+See the [build environment setup](https://docs.qmk.fm/#/getting_started_build_tools)
+and the [make instructions](https://docs.qmk.fm/#/getting_started_make_guide) for
 more information. Brand new to QMK? Start with the
 [Complete Newbs Guide](https://docs.qmk.fm/#/newbs).
 
