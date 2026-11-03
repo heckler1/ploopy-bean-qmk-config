@@ -54,9 +54,9 @@ the acceleration factors below.
 // #define POINTING_DEVICE_HIRES_SCROLL_ENABLE // Enable fluid high-resolution scrolling - broken on MacOS
 
 /* --- Mouse Acceleration (Quadratic) --- */
-#define MOUSE_ACCEL_MIN_SPEED 17 // Threshold to start acceleration
+#define MOUSE_ACCEL_MIN_SPEED 28 // Threshold to start acceleration
 #define MOUSE_ACCEL_SLOPE 0.6  // Aggressiveness of acceleration (Curve Steepness)
-#define MOUSE_ACCEL_LIMIT 1.5 // Maximum speed multiplier cap
+#define MOUSE_ACCEL_LIMIT 1.4 // Maximum speed multiplier cap
 // Multiplier applied at speed == 0, ramping to 1.0x at MOUSE_ACCEL_MIN_SPEED.
 // Lower = slower/more precise fine movement, without affecting speeds >= MOUSE_ACCEL_MIN_SPEED.
 #define MOUSE_ACCEL_LOW_SPEED_SENSITIVITY 0.01f
